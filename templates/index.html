@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FanFlow AI — Stadium Assistant</title>
+  <meta name="description" content="GenAI-powered wayfinding, crowd management, and multilingual assistance for FIFA World Cup 2026 host stadiums.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">FanFlow<span class="brand-ai">AI</span></span>
+    </div>
+    <p class="brand-tagline">Smart stadium operations — World Cup 2026</p>
+  </header>
+
+  <main id="main">
+    <section class="panel crowd-panel" aria-labelledby="crowd-heading">
+      <div class="panel-head">
+        <h1 id="crowd-heading">Concourse pulse</h1>
+        <p class="panel-sub">Live occupancy across gates &amp; zones</p>
+      </div>
+
+      <div id="crowd-status" class="crowd-status" role="status" aria-live="polite">
+        Loading current occupancy&hellip;
+      </div>
+
+      <ul id="zone-list" class="zone-list" aria-label="Zone occupancy list"></ul>
+
+      <button id="refresh-crowd" type="button" class="btn btn-ghost">
+        Refresh occupancy
+      </button>
+    </section>
+
+    <section class="panel navigate-panel" aria-labelledby="navigate-heading">
+      <h2 id="navigate-heading">Which gate should I use?</h2>
+      <p class="panel-sub">Get the least-congested entrance right now.</p>
+      <button id="find-gate" type="button" class="btn btn-primary">
+        Find my best gate
+      </button>
+      <p id="gate-suggestion" class="gate-suggestion" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="panel chat-panel" aria-labelledby="chat-heading">
+      <h2 id="chat-heading">Ask FanFlow</h2>
+      <p class="panel-sub">Wayfinding, accessibility, transport, tournament info — in your language.</p>
+
+      <div id="chat-log" class="chat-log" role="log" aria-live="polite" aria-label="Conversation with FanFlow assistant">
+        <div class="chat-bubble chat-bubble-assistant">
+          Hi! Ask me how to reach your seat, find step-free access, catch the last shuttle, or anything else about today at the stadium.
+        </div>
+      </div>
+
+      <form id="chat-form" class="chat-form">
+        <label for="chat-input" class="visually-hidden">Your question</label>
+        <input
+          id="chat-input"
+          name="message"
+          type="text"
+          maxlength="500"
+          autocomplete="off"
+          placeholder="e.g. Where is the nearest accessible restroom to Gate C?"
+          required
+        >
+        <button type="submit" class="btn btn-primary">Send</button>
+      </form>
+      <p id="chat-error" class="form-error" role="alert"></p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Built for PromptWars — Challenge 4: Smart Stadiums &amp; Tournament Operations.</p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

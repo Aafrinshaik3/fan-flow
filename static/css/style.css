@@ -1,0 +1,284 @@
+/* ---------------------------------------------------------------
+   FanFlow AI — design tokens
+   Palette: a stadium at night, seen from the upper concourse.
+   ------------------------------------------------------------- */
+:root {
+  --pitch-night: #0e1b2c;
+  --pitch-night-raised: #16283e;
+  --turf: #2fa06a;
+  --turf-dim: #1f7a4d;
+  --floodlight: #f2c94c;
+  --floodlight-dim: #caa53b;
+  --alert: #ef5b5b;
+  --mist: #aab4bf;
+  --fog-white: #f5f7fa;
+
+  --font-display: "Barlow Condensed", sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --radius: 10px;
+  --focus-ring: 3px solid var(--floodlight);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--pitch-night);
+  color: var(--fog-white);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: var(--floodlight);
+  color: var(--pitch-night);
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  z-index: 100;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.site-header {
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand-mark {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, var(--turf), var(--floodlight));
+  display: inline-block;
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.9rem;
+  letter-spacing: 0.01em;
+}
+
+.brand-ai {
+  color: var(--floodlight);
+}
+
+.brand-tagline {
+  margin: 0.25rem 0 0;
+  color: var(--mist);
+  font-size: 0.95rem;
+}
+
+main {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.panel {
+  background: var(--pitch-night-raised);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+
+.panel-head h1,
+.panel h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  margin: 0 0 0.15rem;
+  letter-spacing: 0.01em;
+}
+
+.panel-sub {
+  margin: 0 0 1rem;
+  color: var(--mist);
+  font-size: 0.92rem;
+}
+
+/* Crowd pulse meter — the signature element: a segmented occupancy bar
+   per zone, styled like concourse signage rather than a generic chart. */
+.zone-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.zone-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.2rem 0.75rem;
+  align-items: center;
+}
+
+.zone-name {
+  font-size: 0.92rem;
+}
+
+.zone-pct {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--mist);
+}
+
+.zone-bar-track {
+  grid-column: 1 / -1;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.zone-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.zone-bar-fill.level-normal { background: var(--turf); }
+.zone-bar-fill.level-warning { background: var(--floodlight); }
+.zone-bar-fill.level-critical { background: var(--alert); }
+
+.zone-recommendation {
+  grid-column: 1 / -1;
+  font-size: 0.82rem;
+  color: var(--mist);
+}
+
+.crowd-status {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--mist);
+}
+
+.btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--floodlight);
+  color: var(--pitch-night);
+}
+.btn-primary:hover { background: var(--floodlight-dim); }
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--fog-white);
+  margin-top: 0.9rem;
+}
+.btn-ghost:hover { border-color: var(--floodlight); }
+
+.gate-suggestion {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  min-height: 1.2em;
+}
+
+.chat-log {
+  display: grid;
+  gap: 0.6rem;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+  margin-bottom: 0.9rem;
+}
+
+.chat-bubble {
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  max-width: 90%;
+}
+
+.chat-bubble-assistant {
+  background: rgba(47, 160, 106, 0.15);
+  border: 1px solid rgba(47, 160, 106, 0.35);
+}
+
+.chat-bubble-user {
+  background: rgba(242, 201, 76, 0.12);
+  border: 1px solid rgba(242, 201, 76, 0.3);
+  justify-self: end;
+}
+
+.chat-form {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.chat-form input {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--pitch-night);
+  color: var(--fog-white);
+  font-size: 0.95rem;
+}
+
+.form-error {
+  color: var(--alert);
+  font-size: 0.85rem;
+  min-height: 1.2em;
+  margin: 0.5rem 0 0;
+}
+
+.site-footer {
+  text-align: center;
+  color: var(--mist);
+  font-size: 0.8rem;
+  padding: 2rem 1rem 3rem;
+}
+
+@media (max-width: 480px) {
+  .brand-name { font-size: 1.6rem; }
+  main { padding: 1rem; }
+}

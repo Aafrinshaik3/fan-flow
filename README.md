@@ -1,0 +1,96 @@
+# FanFlow AI
+
+A GenAI-enabled stadium operations assistant built for **PromptWars — Challenge 4: Smart Stadiums & Tournament Operations**.
+
+FanFlow helps fans, volunteers, and venue staff during FIFA World Cup 2026 with:
+
+| Challenge area | How FanFlow addresses it |
+|---|---|
+| **Navigation** | `/api/navigate` recommends the least-congested gate/zone in real time |
+| **Crowd management** | `/api/crowd` streams a live occupancy snapshot per zone with normal/warning/critical staffing recommendations |
+| **Accessibility** | The assistant answers step-free route and accessible-seating questions; the UI itself follows WCAG-minded patterns (see below) |
+| **Multilingual assistance** | The GenAI assistant replies in whatever language the visitor writes in |
+| **Operational intelligence** | The crowd engine classifies zones against occupancy thresholds and generates concrete staffing actions, not just raw numbers |
+| **Real-time decision support** | Both staff (crowd dashboard) and fans (chat + gate finder) get actionable, live guidance from the same data |
+
+## Architecture
+
+```
+fanflow-ai/
+├── app.py                  Flask routes, validation, rate limiting, security headers
+├── config.py                Environment-based configuration (no hard-coded secrets)
+├── services/
+│   ├── ai_assistant.py       Anthropic Claude wrapper -- multilingual Q&A
+│   ├── crowd_monitor.py      Crowd telemetry simulation + recommendation engine
+│   └── security.py           Input sanitization + in-memory rate limiter
+├── templates/index.html      Semantic, accessible single-page UI
+├── static/css/style.css      Design system (see tokens below)
+├── static/js/app.js          Vanilla JS wiring the UI to the API (no build step)
+└── tests/                    27 pytest unit + integration tests
+```
+
+**Why this shape:** `crowd_monitor.py` simulates the sensor/turnstile telemetry a
+real venue would provide (CCTV people-counting, Wi-Fi/BLE density, turnstile
+counts) behind a clean interface, so the actual operational-intelligence logic
+— thresholding, staffing recommendations, "find me a quieter gate" — is fully
+implemented and testable today, and can be pointed at real telemetry by
+swapping one function.
+
+## Security
+
+- No secrets in source; `ANTHROPIC_API_KEY` and `FLASK_SECRET_KEY` are read from
+  the environment only (see `.env.example`).
+- All chat input is length-capped and control-character-stripped before use
+  (`services/security.py`); Flask's `MAX_CONTENT_LENGTH` caps request bodies.
+- Per-client sliding-window rate limiting on the chat endpoint.
+- Security headers (`X-Content-Type-Options`, `X-Frame-Options`,
+  `Referrer-Policy`) and an explicit CORS allow-list on every response.
+- The assistant **fails closed**: any API error or missing key returns a
+  generic, safe message and tells the visitor to ask a steward — it never
+  leaks stack traces or exception internals to the client.
+- Jinja auto-escaping (on by default) and `textContent`-only DOM writes in
+  `app.js` prevent reflected-content injection.
+
+## Accessibility
+
+- Semantic landmarks (`header`, `main`, `section`), one `h1` per page, visible
+  skip-to-content link.
+- Live regions (`aria-live`, `role="status"`/`role="log"`) announce crowd
+  updates and chat replies to screen reader users without a page reload.
+- Visible focus rings on every interactive element; `prefers-reduced-motion`
+  is respected.
+- Color choices keep body text and interactive elements at 4.5:1+ contrast
+  against the dark background.
+- The assistant itself is an accessibility feature: it answers step-free
+  route and accessible-seating questions in plain language on demand.
+
+## Running it
+
+```bash
+cp .env.example .env        # then add your ANTHROPIC_API_KEY
+pip install -r requirements.txt
+python app.py                # http://localhost:5000
+```
+
+Without an API key, the app still runs: the crowd dashboard and gate finder
+work fully on simulated data, and chat responds with a clear "ask a steward"
+fallback instead of failing.
+
+## Testing
+
+```bash
+pytest -v
+```
+
+27 tests cover input validation edge cases, rate-limit behavior, crowd
+threshold boundaries (74/75%, 91/92%), route status codes, and the chat
+endpoint with the Anthropic client mocked out (no network or API key needed
+to run the suite).
+
+## Possible next steps
+
+- Replace the simulated telemetry in `crowd_monitor.py` with real turnstile/
+  camera feed integration.
+- Add push notifications (webhook or SMS) when a zone crosses "critical".
+- Persist chat transcripts (opt-in, anonymized) to spot recurring pain points
+  across a tournament.
