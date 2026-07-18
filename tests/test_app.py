@@ -45,6 +45,48 @@ class TestCrowdAndNavigate:
         assert "suggestion" in resp.get_json()
 
 
+class TestIncidentEndpoint:
+    def test_rejects_missing_description(self, client):
+        resp = client.post("/api/incident", json={})
+        assert resp.status_code == 400
+
+    def test_rejects_overlong_description(self, client):
+        resp = client.post("/api/incident", json={"description": "a" * 1000})
+        assert resp.status_code == 400
+
+    def test_returns_triage_result(self, client, monkeypatch):
+        monkeypatch.setattr(
+            app_module.assistant,
+            "triage_incident",
+            lambda description: {
+                "category": "crowd",
+                "priority": "high",
+                "action": "Dispatch stewards to Gate B.",
+            },
+        )
+        resp = client.post(
+            "/api/incident", json={"description": "Crowd surge at Gate B"}
+        )
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["priority"] == "high"
+        assert data["category"] == "crowd"
+
+    def test_enforces_rate_limit(self, client, monkeypatch):
+        monkeypatch.setattr(
+            app_module.assistant,
+            "triage_incident",
+            lambda description: {"category": "other", "priority": "low", "action": "ok"},
+        )
+        app_module._chat_limiter = app_module.RateLimiter(max_requests=1)
+
+        resp1 = client.post("/api/incident", json={"description": "minor spill"})
+        assert resp1.status_code == 200
+
+        resp2 = client.post("/api/incident", json={"description": "minor spill"})
+        assert resp2.status_code == 429
+
+
 class TestChatEndpoint:
     def test_rejects_missing_message(self, client):
         resp = client.post("/api/chat", json={})

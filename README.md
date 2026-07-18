@@ -11,7 +11,8 @@ FanFlow helps fans, volunteers, and venue staff during FIFA World Cup 2026 with:
 | **Accessibility** | The assistant answers step-free route and accessible-seating questions; the UI itself follows WCAG-minded patterns (see below) |
 | **Multilingual assistance** | The GenAI assistant replies in whatever language the visitor writes in |
 | **Operational intelligence** | The crowd engine classifies zones against occupancy thresholds and generates concrete staffing actions, not just raw numbers |
-| **Real-time decision support** | Both staff (crowd dashboard) and fans (chat + gate finder) get actionable, live guidance from the same data |
+| **Workflow optimization (staff/organizers)** | `/api/incident` lets any steward describe a problem in plain language; GenAI classifies category + priority and returns a concrete first action, in seconds instead of a radio call and manual triage |
+| **Real-time decision support** | Staff (crowd dashboard + incident triage) and fans (chat + gate finder) both get actionable, live guidance from the same platform |
 
 ## Architecture
 
@@ -72,6 +73,9 @@ pip install -r requirements.txt
 python app.py                # http://localhost:5000
 ```
 
+`.env` is loaded automatically via `python-dotenv` (see `config.py`) — no
+manual `export` needed.
+
 Without an API key, the app still runs: the crowd dashboard and gate finder
 work fully on simulated data, and chat responds with a clear "ask a steward"
 fallback instead of failing.
@@ -82,10 +86,11 @@ fallback instead of failing.
 pytest -v
 ```
 
-27 tests cover input validation edge cases, rate-limit behavior, crowd
-threshold boundaries (74/75%, 91/92%), route status codes, and the chat
-endpoint with the Anthropic client mocked out (no network or API key needed
-to run the suite).
+39 tests cover input validation edge cases, rate-limit behavior, crowd
+threshold boundaries (74/75%, 91/92%), route status codes, malformed/
+adversarial AI-output parsing for the incident triage feature, and the
+chat + incident endpoints with the Anthropic client mocked out (no network
+or API key needed to run the suite).
 
 ## Possible next steps
 

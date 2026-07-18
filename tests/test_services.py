@@ -68,6 +68,68 @@ class TestSanitizeText:
             sanitize_text("a" * 51, max_length=50)
 
 
+class TestParseTriageResponse:
+    def test_parses_valid_json(self):
+        from services.ai_assistant import parse_triage_response
+
+        raw = (
+            '{"category": "crowd", "priority": "high", '
+            '"action": "Dispatch two stewards to Gate B."}'
+        )
+        result = parse_triage_response(raw)
+        assert result == {
+            "category": "crowd",
+            "priority": "high",
+            "action": "Dispatch two stewards to Gate B.",
+        }
+
+    def test_falls_back_on_malformed_json(self):
+        from services.ai_assistant import _TRIAGE_FALLBACK, parse_triage_response
+
+        assert parse_triage_response("not json at all") == _TRIAGE_FALLBACK
+
+    def test_falls_back_on_invalid_category(self):
+        from services.ai_assistant import _TRIAGE_FALLBACK, parse_triage_response
+
+        raw = '{"category": "banana", "priority": "high", "action": "do something"}'
+        assert parse_triage_response(raw) == _TRIAGE_FALLBACK
+
+    def test_falls_back_on_invalid_priority(self):
+        from services.ai_assistant import _TRIAGE_FALLBACK, parse_triage_response
+
+        raw = '{"category": "medical", "priority": "extreme", "action": "call 911"}'
+        assert parse_triage_response(raw) == _TRIAGE_FALLBACK
+
+    def test_falls_back_on_missing_action(self):
+        from services.ai_assistant import _TRIAGE_FALLBACK, parse_triage_response
+
+        raw = '{"category": "medical", "priority": "critical", "action": ""}'
+        assert parse_triage_response(raw) == _TRIAGE_FALLBACK
+
+    def test_falls_back_when_wrapped_in_extra_text(self):
+        # Models sometimes ignore "JSON only" instructions; confirm we fail
+        # safe rather than trying to regex-extract embedded JSON.
+        from services.ai_assistant import _TRIAGE_FALLBACK, parse_triage_response
+
+        raw = 'Here is the classification: {"category": "medical", "priority": "high", "action": "x"}'
+        assert parse_triage_response(raw) == _TRIAGE_FALLBACK
+
+
+class TestStadiumAssistantTriage:
+    def test_triage_falls_back_without_api_key(self):
+        from services.ai_assistant import _TRIAGE_FALLBACK, StadiumAssistant
+
+        unconfigured = StadiumAssistant(api_key="")
+        assert unconfigured.triage_incident("Fire near Gate A") == _TRIAGE_FALLBACK
+
+    def test_ask_falls_back_without_api_key(self):
+        from services.ai_assistant import StadiumAssistant
+
+        unconfigured = StadiumAssistant(api_key="")
+        reply = unconfigured.ask("Where is Gate C?")
+        assert reply.degraded is True
+
+
 class TestRateLimiter:
     def test_allows_up_to_the_limit(self):
         limiter = RateLimiter(max_requests=3, window_seconds=60)

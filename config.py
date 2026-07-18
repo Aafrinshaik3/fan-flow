@@ -10,6 +10,13 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 
+from dotenv import load_dotenv
+
+# Load variables from a local .env file (if present) into the process
+# environment. In real deployments (Render, Railway, etc.) env vars are set
+# directly on the platform and this is a harmless no-op.
+load_dotenv()
+
 
 def _get_bool(name: str, default: bool) -> bool:
     val = os.getenv(name)

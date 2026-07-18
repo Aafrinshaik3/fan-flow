@@ -126,5 +126,22 @@ def navigate():
     return jsonify({"suggestion": suggest_alternate_gate(snapshot)})
 
 
+@app.route("/api/incident", methods=["POST"])
+def incident():
+    """Staff/volunteer workflow: triage a free-text incident report."""
+    if not _chat_limiter.allow(_client_key()):
+        return jsonify({"error": "Too many requests. Please wait a moment."}), 429
+
+    payload = request.get_json(silent=True) or {}
+    description = sanitize_text(
+        payload.get("description"),
+        max_length=config.max_message_length,
+        field_name="description",
+    )
+
+    result = assistant.triage_incident(description)
+    return jsonify(result)
+
+
 if __name__ == "__main__":
     app.run(debug=config.debug)

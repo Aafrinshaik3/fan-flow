@@ -15,6 +15,7 @@ Design notes (efficiency + security):
 """
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass
 
@@ -48,6 +49,38 @@ _FALLBACK_MESSAGE = (
     "The AI assistant is temporarily unavailable. Please ask the nearest "
     "steward or check the venue signage for directions."
 )
+
+_TRIAGE_SYSTEM_PROMPT = """\
+You are an operations triage assistant at a FIFA World Cup 2026 stadium.
+A steward, volunteer, or staff member will describe a situation in their
+own words. Classify it to help the control room route it correctly.
+
+Respond with ONLY a JSON object, no other text, in exactly this shape:
+{"category": "medical" | "security" | "crowd" | "facilities" | "lost_and_found" | "other",
+ "priority": "low" | "medium" | "high" | "critical",
+ "action": "<one short sentence: who to notify and what to do first>"}
+
+Guidance:
+- "critical" = immediate risk to life/safety (medical emergencies, fights,
+  fire, structural issues, crush risk). These must always be routed to
+  on-site emergency services first, not just stadium staff.
+- "high" = urgent but not immediately life-threatening (rapidly building
+  crowd surge, missing child, credible security concern).
+- "medium"/"low" = standard operational issues (spill, broken turnstile,
+  lost item, minor complaint).
+- Never invent facts not in the report. If the description is too vague
+  to classify, use category "other" and priority "low", and say so in
+  the action.
+"""
+
+_TRIAGE_FALLBACK = {
+    "category": "other",
+    "priority": "medium",
+    "action": (
+        "AI triage unavailable -- escalate this report to the control room "
+        "manually so a human can prioritize it."
+    ),
+}
 
 
 @dataclass
@@ -94,6 +127,69 @@ class StadiumAssistant:
 
         text_parts = [block.text for block in response.content if block.type == "text"]
         return AssistantReply(text="".join(text_parts).strip() or _FALLBACK_MESSAGE)
+
+    def triage_incident(self, description: str) -> dict:
+        """
+        Classify a free-text incident report into a category, priority, and
+        recommended first action for the control room.
+
+        Always returns a well-formed dict, even on API failure or malformed
+        model output, so callers never have to special-case this method.
+        """
+        if not self.is_configured:
+            logger.warning("Triage called without ANTHROPIC_API_KEY configured.")
+            return dict(_TRIAGE_FALLBACK)
+
+        try:
+            response = self._client.messages.create(
+                model=self._model,
+                max_tokens=200,
+                system=_TRIAGE_SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": description}],
+            )
+        except APIError:
+            logger.exception("Anthropic API call failed during triage.")
+            return dict(_TRIAGE_FALLBACK)
+
+        raw_text = "".join(
+            block.text for block in response.content if block.type == "text"
+        )
+        return parse_triage_response(raw_text)
+
+
+def parse_triage_response(raw_text: str) -> dict:
+    """
+    Parse the model's JSON triage response defensively.
+
+    Pulled out as a standalone function (rather than inlined) so it can be
+    unit-tested against malformed/unexpected model output without needing
+    a live API call.
+    """
+    valid_categories = {
+        "medical", "security", "crowd", "facilities", "lost_and_found", "other",
+    }
+    valid_priorities = {"low", "medium", "high", "critical"}
+
+    try:
+        data = json.loads(raw_text.strip())
+    except (json.JSONDecodeError, AttributeError):
+        logger.warning("Triage response was not valid JSON: %r", raw_text[:200])
+        return dict(_TRIAGE_FALLBACK)
+
+    category = data.get("category")
+    priority = data.get("priority")
+    action = data.get("action")
+
+    if (
+        category not in valid_categories
+        or priority not in valid_priorities
+        or not isinstance(action, str)
+        or not action.strip()
+    ):
+        logger.warning("Triage response failed shape validation: %r", data)
+        return dict(_TRIAGE_FALLBACK)
+
+    return {"category": category, "priority": priority, "action": action.strip()}
 
 
 # Module-level singleton, imported by the Flask app.

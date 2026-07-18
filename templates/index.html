@@ -47,6 +47,27 @@
       <p id="gate-suggestion" class="gate-suggestion" role="status" aria-live="polite"></p>
     </section>
 
+    <section class="panel triage-panel" aria-labelledby="triage-heading">
+      <h2 id="triage-heading">Staff: report an incident</h2>
+      <p class="panel-sub">Describe what's happening — AI triage suggests priority &amp; routing instantly.</p>
+
+      <form id="triage-form" class="triage-form">
+        <label for="triage-input" class="visually-hidden">Incident description</label>
+        <textarea
+          id="triage-input"
+          name="description"
+          maxlength="500"
+          rows="2"
+          placeholder="e.g. Growing crowd surge at Gate B turnstiles, queue backing onto the road"
+          required
+        ></textarea>
+        <button type="submit" class="btn btn-primary">Triage</button>
+      </form>
+      <p id="triage-error" class="form-error" role="alert"></p>
+
+      <div id="triage-result" class="triage-result" role="status" aria-live="polite"></div>
+    </section>
+
     <section class="panel chat-panel" aria-labelledby="chat-heading">
       <h2 id="chat-heading">Ask FanFlow</h2>
       <p class="panel-sub">Wayfinding, accessibility, transport, tournament info — in your language.</p>

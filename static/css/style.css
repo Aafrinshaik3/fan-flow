@@ -222,6 +222,47 @@ main {
   min-height: 1.2em;
 }
 
+.triage-form {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+
+.triage-form textarea {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--pitch-night);
+  color: var(--fog-white);
+  font-size: 0.95rem;
+  font-family: var(--font-body);
+  resize: vertical;
+}
+
+.triage-result {
+  margin-top: 0.9rem;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.92rem;
+}
+
+.triage-badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  width: fit-content;
+  text-transform: uppercase;
+}
+
+.priority-critical { background: var(--alert); color: var(--pitch-night); }
+.priority-high { background: var(--floodlight); color: var(--pitch-night); }
+.priority-medium { background: rgba(255, 255, 255, 0.15); color: var(--fog-white); }
+.priority-low { background: rgba(255, 255, 255, 0.08); color: var(--mist); }
+
 .chat-log {
   display: grid;
   gap: 0.6rem;

@@ -17,6 +17,11 @@
   const chatLog = document.getElementById("chat-log");
   const chatErrorEl = document.getElementById("chat-error");
 
+  const triageForm = document.getElementById("triage-form");
+  const triageInput = document.getElementById("triage-input");
+  const triageErrorEl = document.getElementById("triage-error");
+  const triageResultEl = document.getElementById("triage-result");
+
   const history = [];
 
   async function fetchJSON(url, options) {
@@ -118,9 +123,44 @@
     }
   }
 
+  async function submitIncident(event) {
+    event.preventDefault();
+    triageErrorEl.textContent = "";
+    triageResultEl.innerHTML = "";
+    const description = triageInput.value.trim();
+    if (!description) return;
+
+    const submitBtn = triageForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+
+    try {
+      const data = await fetchJSON("/api/incident", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description }),
+      });
+
+      const badge = document.createElement("span");
+      badge.className = `triage-badge priority-${data.priority}`;
+      badge.textContent = `${data.priority} · ${data.category.replace("_", " ")}`;
+
+      const action = document.createElement("p");
+      action.textContent = data.action;
+      action.style.margin = "0";
+
+      triageResultEl.append(badge, action);
+      triageInput.value = "";
+    } catch (err) {
+      triageErrorEl.textContent = err.message;
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
   refreshBtn.addEventListener("click", loadCrowd);
   findGateBtn.addEventListener("click", findGate);
   chatForm.addEventListener("submit", sendMessage);
+  triageForm.addEventListener("submit", submitIncident);
 
   loadCrowd();
 })();
