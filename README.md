@@ -99,3 +99,9 @@ or API key needed to run the suite).
 - Add push notifications (webhook or SMS) when a zone crosses "critical".
 - Persist chat transcripts (opt-in, anonymized) to spot recurring pain points
   across a tournament.
+> **Note on the live deployment:** The GenAI chat and incident-triage features
+> are fully implemented and tested (see the 39-test suite below, which
+> includes mocked Anthropic API calls). If the live demo shows a fallback
+> message instead of a live AI reply, it's because the Anthropic account
+> currently has no API credit balance, not a code issue — the app is
+> designed to fail safely in exactly this situation rather than crash.
