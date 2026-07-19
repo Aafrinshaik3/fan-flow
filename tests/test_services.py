@@ -130,6 +130,56 @@ class TestStadiumAssistantTriage:
         assert reply.degraded is True
 
 
+class TestSustainability:
+    def test_snapshot_covers_every_station(self):
+        from services.sustainability import RECYCLING_STATIONS, get_sustainability_snapshot
+
+        snapshot = get_sustainability_snapshot(rng=random.Random(3))
+        station_names = {b.station for b in snapshot.bins}
+        assert station_names == set(RECYCLING_STATIONS)
+
+    @pytest.mark.parametrize(
+        "fill_pct,expected_level",
+        [(10, "ok"), (69, "ok"), (70, "warning"), (89, "warning"), (90, "critical"), (99, "critical")],
+    )
+    def test_bin_level_thresholds(self, fill_pct, expected_level):
+        from services.sustainability import get_sustainability_snapshot
+
+        class FixedRandom(random.Random):
+            def randint(self, a, b):
+                return fill_pct
+
+        snapshot = get_sustainability_snapshot(rng=FixedRandom())
+        assert all(b.level == expected_level for b in snapshot.bins)
+
+    def test_suggest_transport_short_distance_uses_shuttle(self):
+        from services.sustainability import suggest_transport_option
+
+        result = suggest_transport_option(2)
+        assert result["recommended_mode"] == "shuttle"
+        assert result["estimated_co2_saved_g"] > 0
+
+    def test_suggest_transport_medium_distance_uses_transit(self):
+        from services.sustainability import suggest_transport_option
+
+        result = suggest_transport_option(10)
+        assert result["recommended_mode"] == "public_transit"
+
+    def test_suggest_transport_long_distance_uses_shared_rideshare(self):
+        from services.sustainability import suggest_transport_option
+
+        result = suggest_transport_option(30)
+        assert result["recommended_mode"] == "rideshare_shared"
+
+    def test_suggest_transport_rejects_zero_or_negative(self):
+        from services.sustainability import suggest_transport_option
+
+        with pytest.raises(ValueError):
+            suggest_transport_option(0)
+        with pytest.raises(ValueError):
+            suggest_transport_option(-5)
+
+
 class TestRateLimiter:
     def test_allows_up_to_the_limit(self):
         limiter = RateLimiter(max_requests=3, window_seconds=60)

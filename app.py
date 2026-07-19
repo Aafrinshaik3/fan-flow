@@ -18,6 +18,7 @@ from config import config
 from services.ai_assistant import assistant
 from services.crowd_monitor import get_snapshot, suggest_alternate_gate
 from services.security import RateLimiter, ValidationError, sanitize_text
+from services.sustainability import get_sustainability_snapshot, suggest_transport_option
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -140,6 +141,43 @@ def incident():
     )
 
     result = assistant.triage_incident(description)
+    return jsonify(result)
+
+
+@app.route("/api/sustainability", methods=["GET"])
+def sustainability():
+    snapshot = get_sustainability_snapshot()
+    return jsonify(
+        {
+            "bins": [
+                {
+                    "station": b.station,
+                    "fill_pct": b.fill_pct,
+                    "level": b.level,
+                    "recommendation": b.recommendation,
+                }
+                for b in snapshot.bins
+            ],
+            "critical_count": len(snapshot.critical_bins),
+        }
+    )
+
+
+@app.route("/api/transport", methods=["POST"])
+def transport():
+    payload = request.get_json(silent=True) or {}
+    distance_raw = payload.get("distance_km")
+
+    try:
+        distance_km = float(distance_raw)
+    except (TypeError, ValueError):
+        return jsonify({"error": "distance_km must be a number."}), 400
+
+    try:
+        result = suggest_transport_option(distance_km)
+    except ValueError as err:
+        return jsonify({"error": str(err)}), 400
+
     return jsonify(result)
 
 

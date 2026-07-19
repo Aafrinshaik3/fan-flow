@@ -1,8 +1,13 @@
 # FanFlow AI
 
-
-> **Note on the live deployment:** The GenAI chat and incident-triage features are fully implemented and tested (see the 39-test suite below, which includes mocked Anthropic API calls). If the live demo shows a fallback message instead of a live AI reply, it's because the Anthropic account currently has no API credit balance, not a code issue — the app is designed to fail safely in exactly this situation rather than crash.
 A GenAI-enabled stadium operations assistant built for **PromptWars — Challenge 4: Smart Stadiums & Tournament Operations**.
+
+> **Note on the live deployment:** The GenAI chat and incident-triage features
+> are fully implemented and tested (see the 39-test suite below, which
+> includes mocked Anthropic API calls). If the live demo shows a fallback
+> message instead of a live AI reply, it's because the Anthropic account
+> currently has no API credit balance, not a code issue — the app is
+> designed to fail safely in exactly this situation rather than crash.
 
 FanFlow helps fans, volunteers, and venue staff during FIFA World Cup 2026 with:
 
@@ -14,7 +19,9 @@ FanFlow helps fans, volunteers, and venue staff during FIFA World Cup 2026 with:
 | **Multilingual assistance** | The GenAI assistant replies in whatever language the visitor writes in |
 | **Operational intelligence** | The crowd engine classifies zones against occupancy thresholds and generates concrete staffing actions, not just raw numbers |
 | **Workflow optimization (staff/organizers)** | `/api/incident` lets any steward describe a problem in plain language; GenAI classifies category + priority and returns a concrete first action, in seconds instead of a radio call and manual triage |
-| **Real-time decision support** | Staff (crowd dashboard + incident triage) and fans (chat + gate finder) both get actionable, live guidance from the same platform |
+| **Sustainability** | `/api/sustainability` monitors recycling/waste stations and flags collection needs before overflow; UI shows live bin status per zone |
+| **Transportation** | `/api/transport` recommends the lowest-carbon reasonable way home for a given distance, with an estimated CO2 saving vs. solo rideshare, so the tradeoff is concrete rather than abstract |
+| **Real-time decision support** | Staff (crowd dashboard + incident triage) and fans (chat + gate finder + transport advisory) both get actionable, live guidance from the same platform |
 
 ## Architecture
 
@@ -82,17 +89,33 @@ Without an API key, the app still runs: the crowd dashboard and gate finder
 work fully on simulated data, and chat responds with a clear "ask a steward"
 fallback instead of failing.
 
+## Code quality tooling
+
+- `ruff` (config in `pyproject.toml`) enforces linting rules (unused
+  imports, import order, bug-prone patterns, simplifications) on every run.
+- `.github/workflows/ci.yml` runs the full test suite and `ruff check`
+  automatically on every push and pull request to `main`.
+- Run locally:
+  ```bash
+  pip install ruff
+  ruff check .
+  pytest -v
+  ```
+
 ## Testing
 
 ```bash
 pytest -v
 ```
 
-39 tests cover input validation edge cases, rate-limit behavior, crowd
-threshold boundaries (74/75%, 91/92%), route status codes, malformed/
-adversarial AI-output parsing for the incident triage feature, and the
-chat + incident endpoints with the Anthropic client mocked out (no network
-or API key needed to run the suite).
+55 tests cover input validation edge cases, rate-limit behavior, crowd
+threshold boundaries (74/75%, 91/92%), recycling-bin threshold boundaries
+(69/70%, 89/90%), route status codes, malformed/adversarial AI-output
+parsing for the incident triage feature, and the chat + incident +
+sustainability endpoints with the Anthropic client mocked out (no network
+or API key needed to run the suite). A GitHub Actions workflow
+(`.github/workflows/ci.yml`) runs the full suite plus `ruff` linting on
+every push.
 
 ## Possible next steps
 
@@ -100,4 +123,4 @@ or API key needed to run the suite).
   camera feed integration.
 - Add push notifications (webhook or SMS) when a zone crosses "critical".
 - Persist chat transcripts (opt-in, anonymized) to spot recurring pain points
-> designed to fail safely in exactly this situation rather than crash.
+  across a tournament.

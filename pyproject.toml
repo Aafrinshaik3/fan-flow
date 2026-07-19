@@ -1,0 +1,8 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = ["venv", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = ["E501"]

@@ -22,6 +22,13 @@
   const triageErrorEl = document.getElementById("triage-error");
   const triageResultEl = document.getElementById("triage-result");
 
+  const binListEl = document.getElementById("bin-list");
+  const binStatusEl = document.getElementById("bin-status");
+  const transportForm = document.getElementById("transport-form");
+  const transportInput = document.getElementById("transport-input");
+  const transportErrorEl = document.getElementById("transport-error");
+  const transportResultEl = document.getElementById("transport-result");
+
   const history = [];
 
   async function fetchJSON(url, options) {
@@ -161,6 +168,82 @@
   findGateBtn.addEventListener("click", findGate);
   chatForm.addEventListener("submit", sendMessage);
   triageForm.addEventListener("submit", submitIncident);
+
+  function renderBins(data) {
+    binListEl.innerHTML = "";
+    data.bins.forEach((bin) => {
+      const li = document.createElement("li");
+      li.className = "zone-row";
+
+      const name = document.createElement("span");
+      name.className = "zone-name";
+      name.textContent = bin.station;
+
+      const pct = document.createElement("span");
+      pct.className = "zone-pct";
+      pct.textContent = `${bin.fill_pct}%`;
+
+      const track = document.createElement("div");
+      track.className = "zone-bar-track";
+      const fill = document.createElement("div");
+      const level = bin.level === "ok" ? "normal" : bin.level;
+      fill.className = `zone-bar-fill level-${level}`;
+      fill.style.width = `${bin.fill_pct}%`;
+      track.appendChild(fill);
+
+      const rec = document.createElement("span");
+      rec.className = "zone-recommendation";
+      rec.textContent = bin.recommendation;
+
+      li.append(name, pct, track, rec);
+      binListEl.appendChild(li);
+    });
+
+    binStatusEl.textContent =
+      data.critical_count > 0
+        ? `${data.critical_count} station(s) need collection now.`
+        : "All recycling stations within normal capacity.";
+  }
+
+  async function loadBins() {
+    try {
+      const data = await fetchJSON("/api/sustainability");
+      renderBins(data);
+    } catch (err) {
+      binStatusEl.textContent = "Couldn't load recycling station data right now.";
+    }
+  }
+
+  async function submitTransport(event) {
+    event.preventDefault();
+    transportErrorEl.textContent = "";
+    transportResultEl.innerHTML = "";
+    const distance = transportInput.value;
+    if (!distance) return;
+
+    try {
+      const data = await fetchJSON("/api/transport", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ distance_km: distance }),
+      });
+
+      const badge = document.createElement("span");
+      badge.className = "triage-badge priority-medium";
+      badge.textContent = data.recommended_mode.replace("_", " ");
+
+      const note = document.createElement("p");
+      note.style.margin = "0";
+      note.textContent = `${data.note} (~${data.estimated_co2_saved_g}g CO2 saved vs. solo rideshare)`;
+
+      transportResultEl.append(badge, note);
+    } catch (err) {
+      transportErrorEl.textContent = err.message;
+    }
+  }
+
+  transportForm.addEventListener("submit", submitTransport);
+  loadBins();
 
   loadCrowd();
 })();

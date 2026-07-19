@@ -45,6 +45,35 @@ class TestCrowdAndNavigate:
         assert "suggestion" in resp.get_json()
 
 
+class TestSustainabilityEndpoints:
+    def test_sustainability_endpoint_returns_all_stations(self, client):
+        resp = client.get("/api/sustainability")
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert len(data["bins"]) == 5
+        assert "critical_count" in data
+
+    def test_transport_endpoint_returns_suggestion(self, client):
+        resp = client.post("/api/transport", json={"distance_km": 5})
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["recommended_mode"] in {
+            "shuttle", "public_transit", "rideshare_shared",
+        }
+
+    def test_transport_endpoint_rejects_missing_distance(self, client):
+        resp = client.post("/api/transport", json={})
+        assert resp.status_code == 400
+
+    def test_transport_endpoint_rejects_non_numeric_distance(self, client):
+        resp = client.post("/api/transport", json={"distance_km": "far"})
+        assert resp.status_code == 400
+
+    def test_transport_endpoint_rejects_negative_distance(self, client):
+        resp = client.post("/api/transport", json={"distance_km": -3})
+        assert resp.status_code == 400
+
+
 class TestIncidentEndpoint:
     def test_rejects_missing_description(self, client):
         resp = client.post("/api/incident", json={})

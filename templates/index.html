@@ -47,6 +47,32 @@
       <p id="gate-suggestion" class="gate-suggestion" role="status" aria-live="polite"></p>
     </section>
 
+    <section class="panel sustainability-panel" aria-labelledby="sustainability-heading">
+      <h2 id="sustainability-heading">Sustainability &amp; transport</h2>
+      <p class="panel-sub">Recycling station status, and the lowest-carbon way home.</p>
+
+      <div id="bin-status" class="crowd-status" role="status" aria-live="polite">
+        Loading recycling station status&hellip;
+      </div>
+      <ul id="bin-list" class="zone-list" aria-label="Recycling station status list"></ul>
+
+      <form id="transport-form" class="triage-form">
+        <label for="transport-input" class="visually-hidden">Distance home in kilometers</label>
+        <input
+          id="transport-input"
+          name="distance_km"
+          type="number"
+          min="0.1"
+          step="0.1"
+          placeholder="Distance home (km), e.g. 8"
+          required
+        >
+        <button type="submit" class="btn btn-primary">Suggest transport</button>
+      </form>
+      <p id="transport-error" class="form-error" role="alert"></p>
+      <div id="transport-result" class="triage-result" role="status" aria-live="polite"></div>
+    </section>
+
     <section class="panel triage-panel" aria-labelledby="triage-heading">
       <h2 id="triage-heading">Staff: report an incident</h2>
       <p class="panel-sub">Describe what's happening — AI triage suggests priority &amp; routing instantly.</p>
